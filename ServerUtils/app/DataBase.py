@@ -9,42 +9,46 @@ class DataBase():
         self.__db = db
         self.__cur = db.cursor()
 
+
     def add_user(self, name, mail, hpsw):
         try:
-            self.__cur.execute(f"SELECT COUNT() as 'count' FROM User_Info WHERE mail LIKE '{mail}'")
+            # check if user exists
+            self.__cur.execute(f"SELECT COUNT() as 'count' FROM Users WHERE mail = '{mail}'")
             res = self.__cur.fetchone()
             if res['count'] > 0:
-                print('already exists')
                 return {'error':'User already exists'}
 
-            self.__cur.execute(f"INSERT INTO User_Info (name, mail, password) VALUES('{name}', '{mail}', '{hpsw}')")
+            # create new user in db
+            self.__cur.execute(f"INSERT INTO Users (name, mail, password) VALUES('{name}', '{mail}', '{hpsw}')")
             self.__db.commit()
-            self.__cur.execute(f"SELECT id FROM User_Info WHERE mail LIKE '{mail}'")
+            self.__cur.execute(f"SELECT id FROM Users WHERE mail = '{mail}'")
             res = self.__cur.fetchone()
-            return {'id':res}
+            return {'id':res['id'], 'error':0}
 
         except sqlite3.Error:
-            print("Пизда базе при внесении юзера")
             return {'error':'DataBase Error'}
+
 
     def get_account(self, mail, psw):
         try:
-            self.__cur.execute(f"SELECT COUNT() as 'count' FROM User_Info WHERE mail LIKE '{mail}'")
+            # check if user exists
+            self.__cur.execute(f"SELECT COUNT() as 'count' FROM Users WHERE mail = '{mail}'")
             res = self.__cur.fetchone()
             if res['count'] != 1:
-                print('No user')
                 return {'error':'User doesnt exists'}
 
-            self.__cur.execute(f"SELECT * FROM User_Info WHERE mail LIKE '{mail}'")
+            self.__cur.execute(f"SELECT * FROM Users WHERE mail = '{mail}'")
             res = self.__cur.fetchone()
+
+            # check password
             if check_password_hash(res['password'], psw):
-                return {'id':f'{res["id"]}'}
+                return {'id':res['id'], 'error':0}
             else:
                 return {'error':'Wrong password'}
 
         except sqlite3.Error:
-            print("Пизда базе при получении юзера")
             return {'error':'DataBase Error'}
+
 
     def search_items(self, request_string):
         try:
@@ -52,7 +56,6 @@ class DataBase():
             request_list = [x[:4] for x in request_string.split(' ') if len(x) > 4 and x.isalpha()]
 
         except sqlite3.Error:
-            print("Пизда базе при поиске товара")
             return {'error':'DataBase Error'}
 
 
