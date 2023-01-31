@@ -8,30 +8,21 @@ from app import app
 dbase = None
 
 
-# connecting to the database
+# Connecting to the database.
 def connect_db():
     conn = sqlite3.connect(app.config['DATABASE'])
     conn.row_factory =  sqlite3.Row
     return conn
 
 
-# !creating databse, use in terminal
-def create_db():
-    db = connect_db()
-    with app.open_resource('sq_db.sql', mode='r') as f:
-        db.cursor().executescript(f.read())
-    db.commit()
-    db.close()
-
-
+# Set up connection with db, if it doesnt connected yet.
 def get_db():
-    # connection, if it doesnt connected yet
     if not hasattr(g, 'link_db'):
         g.link_db = connect_db()
     return g.link_db
 
 
-# connect to database before every request
+# Connect to database before every request.
 @app.before_request
 def before_request():
     global dbase
@@ -39,14 +30,15 @@ def before_request():
     dbase = DataBase(db)
 
 
-# close the connection after every request
+# Close the connection after every request.
 @app.teardown_appcontext
 def close_db(error):
     if hasattr(g, 'link_db'):
         g.link_db.close()
 
 
-# user authorization, returns user id
+# User authorization. Returns user id, error.
+# Needs mail and password passed in json.
 @app.route('/authentication', methods = ["POST"])
 def authentication():
     if request.method == 'POST':
@@ -56,7 +48,8 @@ def authentication():
     return jsonify(res)
 
 
-# user registration, returns user id
+# User registration. Returns user id, error.
+# Needs user name, mail and password passed in json.
 @app.route('/registration', methods = ["POST"])
 def registration():
     if request.method == 'POST':
@@ -66,7 +59,8 @@ def registration():
 
     return jsonify(res)
 
-# used for searching for items
+# Used for searching for required items.
+# Needs request string and number of items already displayed passed in json.
 @app.route('/search', methods = ["POST"])
 def search():
     if request.method == 'POST':
