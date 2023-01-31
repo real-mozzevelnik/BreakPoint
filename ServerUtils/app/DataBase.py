@@ -1,8 +1,10 @@
 import sqlite3
 from werkzeug.security import check_password_hash
 from app.search_utils import brands, colors, types
+from email_validator import validate_email, EmailNotValidError
 
 
+# Class for interaction with database.
 class DataBase():
     def __init__(self, db):
         self.__db = db
@@ -25,6 +27,8 @@ class DataBase():
     # Db contains user password using hash.
     def add_user(self, name, mail, hpsw):
         try:
+            # Check if email is valid.
+            validate_email(mail)
             # Check if user exists.
             self.__cur.execute(f"SELECT COUNT() as 'count' FROM Users WHERE mail = '{mail}'")
             res = self.__cur.fetchone()
@@ -39,6 +43,10 @@ class DataBase():
             res = self.__cur.fetchone()
             return {'id':res['user_id'], 'error':0}
 
+        # If given email isnt valid it will raise an error, according
+        # to the app architecture it has to be handled that way.
+        except EmailNotValidError:
+            return {'error':'Not valid email'}
         except sqlite3.Error:
             return {'error':'DataBase Error'}
 
@@ -91,8 +99,11 @@ class DataBase():
             # Reason LIMIT is used is that it is not well to send all the itens to frontend.
             # Item counter is the number that stored in frontend.
             # At the beggining of scrolling that equals to 0.
-            # After that server...
-            # !maybe rewrite
+            # After that server returns list of items and number of returned items.
+            # Frontend adds this number to the previos value of item counter. 
+            # When user will scroll down the given items, frontend sends new one request for items
+            # and send his items counter.
+            # But server has to give new items to user, so start of the searching depends on item counter.
             self.__cur.execute(f"""SELECT item_id, name, price, main_photo_src FROM Items 
                 WHERE category LIKE '{item_type}%' AND main_color LIKE '{item_color}%' AND brand LIKE '{item_brand}%'
                 LIMIT {item_counter}, 10""")
@@ -108,6 +119,21 @@ class DataBase():
                 
             return {"items":items_to_send, "error":0, "item_counter":len(items_to_send)}
 
+        except sqlite3.Error:
+            return {'error':'DataBase Error'}
+
+     
+    def get_item(self, item_id):
+        try:
+            self.__cur.execute(f"""SELECT sizes, photo_src FROM Items INNER JOIN Photos 
+                ON Items.item_id = Photos.item_id WHERE Items.item_id = {item_id}""")
+            res = self.__cur.fetchall()
+
+            sizes = res[0]['sizes'].split(" ")
+            photos = [res[0]['photo_src'], res[1]['photo_src']]
+
+            return {"sizes":sizes, "photos":photos}
+            
         except sqlite3.Error:
             return {'error':'DataBase Error'}
 

@@ -68,3 +68,12 @@ def search():
         res = dbase.search_items(content['request_string'], content['item_counter'])
 
     return jsonify(res)
+
+
+@app.route('/item', methods=["POST"])
+def item():
+    if request.method == 'POST':
+        content = request.json
+        res = dbase.get_item(content['item_id'])
+
+    return jsonify(res)
