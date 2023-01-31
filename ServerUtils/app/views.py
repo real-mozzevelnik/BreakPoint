@@ -47,8 +47,8 @@ def close_db(error):
 
 
 # user authorization, returns user id
-@app.route('/authorization', methods = ["POST"])
-def authorization():
+@app.route('/authentication', methods = ["POST"])
+def authentication():
     if request.method == 'POST':
         content = request.json
         res = dbase.get_account(content['mail'], content['psw'])
@@ -71,6 +71,6 @@ def registration():
 def search():
     if request.method == 'POST':
         content = request.json
-        res = dbase.search_items(content['request_string'])
+        res = dbase.search_items(content['request_string'], content['item_counter'])
 
     return jsonify(res)
