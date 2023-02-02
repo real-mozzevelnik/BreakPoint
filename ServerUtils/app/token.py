@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 def generate_token(user_id):
     token = jwt.encode({"user_id" : user_id, 
-    "exp": datetime.utcnow() + timedelta(minutes=30)}, 
+    "exp": datetime.utcnow() + timedelta(days=30)}, 
     app.config['SECRET_KEY'], algorithm = "HS256")
     return token
 
