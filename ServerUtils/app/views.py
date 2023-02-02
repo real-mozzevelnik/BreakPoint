@@ -41,9 +41,8 @@ def close_db(error):
 # Needs mail and password passed in json.
 @app.route('/login', methods = ["POST"])
 def authentication():
-    if request.method == 'POST':
-        content = request.json
-        res = dbase.get_account(content['mail'], content['psw'])
+    content = request.json
+    res = dbase.get_account(content['mail'], content['psw'])
 
     return jsonify(res)
 
@@ -52,10 +51,9 @@ def authentication():
 # Needs user name, mail and password passed in json.
 @app.route('/registr', methods = ["POST"])
 def registration():
-    if request.method == 'POST':
-        content = request.json
-        hash = generate_password_hash(content['psw'])
-        res = dbase.add_user(content['name'], content['mail'], hash)
+    content = request.json
+    hash = generate_password_hash(content['psw'])
+    res = dbase.add_user(content['name'], content['mail'], hash)
 
     return jsonify(res)
 
@@ -63,17 +61,24 @@ def registration():
 # Needs request string and number of items already displayed passed in json.
 @app.route('/search', methods = ["POST"])
 def search():
-    if request.method == 'POST':
-        content = request.json
-        res = dbase.search_items(content['request_string'], content['item_counter'])
+    content = request.json
+    res = dbase.search_items(content['request_string'], content['item_counter'])
 
     return jsonify(res)
 
 
-@app.route('/item', methods=["POST"])
+@app.route('/item', methods = ["POST"])
 def item():
-    if request.method == 'POST':
-        content = request.json
-        res = dbase.get_item(content['item_id'])
+    content = request.json
+    res = dbase.get_item(content['item_id'])
 
     return jsonify(res)
+
+
+@app.route('/does_exists', methods = ['POST'])
+def check_user():
+    content = request.json
+    res = dbase.does_user_exists(content['access_token'])
+
+    return jsonify(res)
+
