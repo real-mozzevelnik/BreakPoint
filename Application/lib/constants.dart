@@ -1,4 +1,4 @@
-const BackendIP = "127.0.0.1";
+const BackendIP = "192.168.0.19";
 const BackendPort = ":5000";
 
 const BackendUrl = BackendIP + BackendPort;
