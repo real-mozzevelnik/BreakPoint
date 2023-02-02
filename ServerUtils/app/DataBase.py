@@ -41,7 +41,7 @@ class DataBase():
             # Send back user_id, so frontend can save it and send it to server for another types of requests.
             self.__cur.execute(f"SELECT user_id FROM Users WHERE mail = '{mail}'")
             res = self.__cur.fetchone()
-            return {'id':res['user_id'], 'error':0}
+            return {'user_id':res['user_id'], 'error':0}
 
         # If given email isnt valid it will raise an error, according
         # to the app architecture it has to be handled that way.
@@ -68,7 +68,7 @@ class DataBase():
             res = self.__cur.fetchone()
 
             # Check password and return id.
-            return {'id':res['user_id'], 'error':0} if check_password_hash(res['password'], psw) else {'error':'Wrong password'}
+            return {'user_id':res['user_id'], 'error':0} if check_password_hash(res['password'], psw) else {'error':'Wrong password'}
 
         except sqlite3.Error:
             return {'error':'DataBase Error'}

@@ -39,7 +39,7 @@ def close_db(error):
 
 # User authorization. Returns user id, error.
 # Needs mail and password passed in json.
-@app.route('/authentication', methods = ["POST"])
+@app.route('/login', methods = ["POST"])
 def authentication():
     if request.method == 'POST':
         content = request.json
@@ -50,7 +50,7 @@ def authentication():
 
 # User registration. Returns user id, error.
 # Needs user name, mail and password passed in json.
-@app.route('/registration', methods = ["POST"])
+@app.route('/registr', methods = ["POST"])
 def registration():
     if request.method == 'POST':
         content = request.json
