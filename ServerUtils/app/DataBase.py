@@ -31,6 +31,7 @@ class DataBase():
     # Method for adding new one user.
     # Checks if user with such mail already exists.
     # Db contains user password using hash.
+    # Returns user id, name, male and expiration time in token.
     def add_user(self, name, mail, hpsw):
         try:
             # Check if email is valid.
@@ -47,7 +48,7 @@ class DataBase():
             # Send back user_id in token, so frontend can save it and send it to server for another types of requests.
             self.__cur.execute(f"SELECT user_id FROM Users WHERE mail = '{mail}'")
             res = self.__cur.fetchone()
-            access_token = generate_token(res['user_id'])
+            access_token = generate_token(res['user_id'], mail, name)
             return {'access_token' : access_token}
 
         # If given email isnt valid it will raise an error, according
@@ -61,7 +62,7 @@ class DataBase():
     # Method to authenticate the user.
     # Checks if user with given mail exists, 
     # compares given password with password from db.
-    # Returns user id in token.
+    # Returns user id, name, male and expiration time in token.
     def get_account(self, mail, psw):
         try:
             # Check if user with given mail exists in db.
@@ -71,11 +72,11 @@ class DataBase():
                 return {'error' : 'User doesnt exists'}
 
             # Get id and password from db.
-            self.__cur.execute(f"SELECT user_id, password FROM Users WHERE mail = '{mail}'")
+            self.__cur.execute(f"SELECT user_id, name, password FROM Users WHERE mail = '{mail}'")
             res = self.__cur.fetchone()
 
             # Check password and return id in token.
-            access_token = generate_token(res['user_id'])
+            access_token = generate_token(res['user_id'], mail, res['name'])
             return {'access_token' : access_token} if check_password_hash(res['password'], psw) else {'error' : 'Wrong password'}
 
         except sqlite3.Error:
