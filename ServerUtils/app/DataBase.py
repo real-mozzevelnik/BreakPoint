@@ -45,7 +45,7 @@ class DataBase():
             # Create new user in db.
             self.__cur.execute(f"INSERT INTO Users (name, mail, password) VALUES('{name}', '{mail}', '{hpsw}')")
             self.__db.commit()
-            # Send back user_id in token, so frontend can save it and send it to server for another types of requests.
+            # Send back data inside token, so frontend can save it and send it to server for another types of requests.
             self.__cur.execute(f"SELECT user_id FROM Users WHERE mail = '{mail}'")
             res = self.__cur.fetchone()
             access_token = generate_token(res['user_id'], mail, name)
@@ -75,7 +75,7 @@ class DataBase():
             self.__cur.execute(f"SELECT user_id, name, password FROM Users WHERE mail = '{mail}'")
             res = self.__cur.fetchone()
 
-            # Check password and return id in token.
+            # Check password and return data inside token.
             access_token = generate_token(res['user_id'], mail, res['name'])
             return {'access_token' : access_token} if check_password_hash(res['password'], psw) else {'error' : 'Wrong password'}
 
