@@ -196,7 +196,7 @@ class DataBase():
             return {'error' : 'DataBase Error'}
 
 
-
+    # Method to get cart for current user.
     def get_cart(self, access_token, item_counter):
         try:
             # Check if token is valid.
@@ -207,6 +207,8 @@ class DataBase():
             # Get user_id from token.
             user_id = jwt_data['user_id']
 
+            # Get requested info.
+            # Logic for item_counter described in comments for "search_items" method.
             self.__cur.execute(f"""SELECT Items.item_id, name, price, main_photo_src FROM Items INNER JOIN Cart
                     ON Items.item_id = Cart.item_id WHERE Cart.user_id = '{user_id}' LIMIT {item_counter}, 15""")
 
@@ -216,10 +218,34 @@ class DataBase():
 
         except sqlite3.Error:
             return {'error' : 'DataBase Error'}
-        
-
-        
-
-        
 
 
+    # Method to update or delete user.
+    def update_user_info(self, access_token, new_mail, new_name, request_type):
+        try:
+            # Check if token is valid.
+            jwt_data = decode_token(access_token)
+            if not jwt_data:
+                return {'error' : 'Invalid token'}
+
+            # Get user_id from token.
+            user_id = jwt_data['user_id']
+
+            # Update info.
+            if request_type == 'POST':
+                self.__cur.execute(f"""UPDATE Users SET mail = '{new_mail}', name = '{new_name}'
+                    WHERE user_id = '{user_id}'""")
+
+            # Delete user.
+            elif request_type == 'DELETE':
+                self.__cur.execute(f"""DELETE FROM Users WHERE user_id = {user_id}""")
+                self.__cur.execute(f"""DELETE FROM Cart WHERE user_id = {user_id}""")
+
+            # Commit changes.
+            self.__db.commit()
+            
+            # Nothing to return (success).
+            return {}
+
+        except sqlite3.Error:
+            return {'error' : 'DataBase Error'}

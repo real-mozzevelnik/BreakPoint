@@ -11,9 +11,9 @@ def generate_token(user_id, mail, name):
     return token
 
 # If token cannot be decoded with secret key, that means token isnt valid.
-# It will raise an exception and return False.
+# It will raise an exception and return None.
 def decode_token(token):
     try:
         return jwt.decode(token, app.config['SECRET_KEY'], algorithms = "HS256")
     except:
-        return False
+        return None
