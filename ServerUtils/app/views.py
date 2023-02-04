@@ -98,3 +98,11 @@ def cart():
     res = dbase.update_cart(content['access_token'], content['item_id'], content['size'], request_type = request.method)
     
     return jsonify(res)
+
+
+@app.route('/show_cart', methods = ['POST'])
+def show_cart():
+    content = request.json
+    res = dbase.get_cart(content['access_token'], content['item_counter'])
+
+    return jsonify(res)
