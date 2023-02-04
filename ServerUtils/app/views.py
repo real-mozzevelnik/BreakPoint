@@ -67,6 +67,8 @@ def search():
     return jsonify(res)
 
 
+# When user taps the item icon, server has to send part of info about item.
+# Needs item id
 @app.route('/item', methods = ["POST"])
 def item():
     content = request.json
@@ -75,6 +77,11 @@ def item():
     return jsonify(res)
 
 
+# Route for checking if user with given id inside token exists in db.
+# The reason it is used is that user have ability to enter his account from
+# different devices. That way he can delete his account from one device and try to enter from
+# another one. When user opens the app, frontend sends the server request to check if that user still exists.
+# If he doenst exists in db frontend redirects user to registr/login page.
 @app.route('/does_exists', methods = ['POST'])
 def check_user():
     content = request.json
@@ -82,3 +89,12 @@ def check_user():
 
     return jsonify(res)
 
+
+# Interacion with cart (add and delete).
+# Needs access token, item id, size.
+@app.route('/cart', methods = ['POST', 'DELETE'])
+def cart():
+    content  = request.json
+    res = dbase.update_cart(content['access_token'], content['item_id'], content['size'], request_type = request.method)
+    
+    return jsonify(res)
