@@ -18,13 +18,16 @@ class DataBase():
     # another one. When user opens the app, frontend sends the server request to check if that user still exists.
     # If he doenst exists in db frontend redirects user to registr/login page.
     def does_user_exists(self, access_token):
+        # Check if token is valid.
         jwt_data = decode_token(access_token)
         if not jwt_data:
             return {'error' : 'Invalid token'}
 
         user_id = jwt_data['user_id']
+        # Check if user exists in db.
         self.__cur.execute(f"SELECT COUNT() as 'count' FROM Users WHERE user_id = '{user_id}'")
         res = self.__cur.fetchone()
+        # Nothing to return if user exists(success).
         return {'error' : 'User doesnt exists'} if not res['count'] else {}
 
 
@@ -131,18 +134,71 @@ class DataBase():
         except sqlite3.Error:
             return {'error' : 'DataBase Error'}
 
-     
+    
+    # Method to get item info from db.
     def get_item(self, item_id):
         try:
+            # Get sizes and photo src from db.
             self.__cur.execute(f"""SELECT sizes, photo_src FROM Items INNER JOIN Photos 
                 ON Items.item_id = Photos.item_id WHERE Items.item_id = {item_id}""")
             res = self.__cur.fetchall()
 
+            # Sizes are contained in db as text (example - 'XS S M L XS').
+            # That way server splits the sizes into array of strings.
             sizes = res[0]['sizes'].split(" ")
+            # Make an arrar from photo src
             photos = [res[0]['photo_src'], res[1]['photo_src']]
 
             return {"sizes" : sizes, "photos" : photos}
             
+        except sqlite3.Error:
+            return {'error' : 'DataBase Error'}
+
+
+    # Method for interation with cart (add and delete).
+    def update_cart(self, access_token, item_id, size, request_type):
+        try:
+            # Check if token is valid.
+            jwt_data = decode_token(access_token)
+            if not jwt_data:
+                return {'error' : 'Invalid token'}
+
+            # Get user_id from token.
+            user_id = jwt_data['user_id']
+
+            # Check if item with given size is in cart.
+            self.__cur.execute(f"""SELECT COUNT() as 'count' FROM Cart WHERE user_id = '{user_id}'
+                AND item_id = '{item_id}' AND size = '{size}'""")
+            res = self.__cur.fetchone()
+
+            # If it was POST request, add item to cart.
+            if request_type == 'POST':
+                # Check if item does not exist yet.
+                if res['count'] != 0:
+                    return {'error' : 'already in cart'}
+
+                # Insert info in cart table.
+                # Table also contains time of adding, that way items could be sorted
+                # when user checks his cart.
+                self.__cur.execute(f"""INSERT INTO Cart (user_id, item_id, add_time, size) 
+                    VALUES('{user_id}', '{item_id}', datetime('now'), '{size}')""")
+
+            # If it was DELETE request, delete item from cart.
+            elif request_type == 'DELETE':
+                # Check if item exists in cart.
+                if res['count'] != 1:
+                    return {'error' : 'not in cart'}
+
+                # Delete item.
+                self.__cur.execute(f"""DELETE FROM Cart WHERE user_id = '{user_id}'
+                    AND item_id = '{item_id}' AND size = '{size}'""")
+
+            # Commit changes.
+            self.__db.commit()
+            
+            # Nothing to return (success).
+            return {}
+
         except sqlite3.Error:
             return {'error' : 'DataBase Error'}
 
