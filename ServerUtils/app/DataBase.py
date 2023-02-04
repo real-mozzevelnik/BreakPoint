@@ -2,7 +2,7 @@ import sqlite3
 from werkzeug.security import check_password_hash
 from email_validator import validate_email, EmailNotValidError
 
-from app.search_utils import brands, colors, types
+from app.item_utils import brands, colors, types, pack_items
 from app.token import generate_token, decode_token
 
 # Class for interaction with database.
@@ -121,15 +121,8 @@ class DataBase():
                 LIMIT {item_counter}, 15""")
 
             res = self.__cur.fetchall()
-            # Array for items.
-            items_to_send = []
-            # Make dict for every item and add it to final array.
-            for i, _ in enumerate(res):
-                tmp = list(res[i])
-                tmp_dict = {"item_id" : tmp[0], "name" : tmp[1], "price" : tmp[2], "main_photo_src" : tmp[3]}
-                items_to_send.append(tmp_dict)
-                
-            return {"items" : items_to_send, "item_counter" : len(items_to_send)}
+
+            return pack_items(res)
 
         except sqlite3.Error:
             return {'error' : 'DataBase Error'}
@@ -201,5 +194,32 @@ class DataBase():
 
         except sqlite3.Error:
             return {'error' : 'DataBase Error'}
+
+
+
+    def get_cart(self, access_token, item_counter):
+        try:
+            # Check if token is valid.
+            jwt_data = decode_token(access_token)
+            if not jwt_data:
+                return {'error' : 'Invalid token'}
+
+            # Get user_id from token.
+            user_id = jwt_data['user_id']
+
+            self.__cur.execute(f"""SELECT Items.item_id, name, price, main_photo_src FROM Items INNER JOIN Cart
+                    ON Items.item_id = Cart.item_id WHERE Cart.user_id = '{user_id}' LIMIT {item_counter}, 15""")
+
+            res = self.__cur.fetchall()
+
+            return pack_items(res)
+
+        except sqlite3.Error:
+            return {'error' : 'DataBase Error'}
+        
+
+        
+
+        
 
 
