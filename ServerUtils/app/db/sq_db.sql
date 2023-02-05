@@ -12,13 +12,15 @@ name text NOT NULL,
 price integer NOT NULL,
 main_color text not NULL,
 sizes text NOT NULL,
-main_photo_src text  NOT NULL
+main_photo_src text  NOT NULL,
+brand text NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS Cart (
 user_id integer NOT NULL,
 item_id integer NOT NULL,
 add_time text NOT NULL,
+size text NOT NULL,
 FOREIGN KEY (user_id) REFERENCES Users (user_id),
 FOREIGN KEY (item_id) REFERENCES Items (item_id)
 );
