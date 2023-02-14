@@ -6,7 +6,7 @@ from app.item_utils import brands, colors, types, pack_items
 from app.token import generate_token, decode_token
 
 # Class for interaction with database.
-class DataBase():
+class Database():
     def __init__(self, db):
         self.__db = db
         self.__cur = db.cursor()
@@ -35,7 +35,7 @@ class DataBase():
     # Checks if user with such mail already exists.
     # Db contains user password using hash.
     # Returns user id, name, male and expiration time in token.
-    def add_user(self, name, mail, hpsw):
+    def create_user(self, name, mail, hpsw):
         try:
             # Check if email is valid.
             validate_email(mail)
@@ -66,7 +66,7 @@ class DataBase():
     # Checks if user with given mail exists, 
     # compares given password with password from db.
     # Returns user id, name, male and expiration time in token.
-    def get_account(self, mail, psw):
+    def retrieve_account(self, mail, psw):
         try:
             # Check if user with given mail exists in db.
             self.__cur.execute(f"SELECT COUNT() as 'count' FROM Users WHERE mail = '{mail}'")
@@ -118,7 +118,7 @@ class DataBase():
             # But server has to give new items to user, so start of the searching depends on item counter.
             self.__cur.execute(f"""SELECT item_id, name, price, main_photo_src FROM Items 
                 WHERE category LIKE '{item_type}%' AND main_color LIKE '{item_color}%' AND brand LIKE '{item_brand}%'
-                LIMIT {item_counter}, 15""")
+                LIMIT {item_counter}, 14""")
 
             res = self.__cur.fetchall()
 
@@ -129,7 +129,7 @@ class DataBase():
 
     
     # Method to get item info from db.
-    def get_item(self, item_id):
+    def retrieve_item(self, item_id):
         try:
             # Get sizes and photo src from db.
             self.__cur.execute(f"""SELECT sizes, photo_src FROM Items INNER JOIN Photos 
@@ -197,7 +197,7 @@ class DataBase():
 
 
     # Method to get cart for current user.
-    def get_cart(self, access_token, item_counter):
+    def retrieve_cart(self, access_token, item_counter):
         try:
             # Check if token is valid.
             jwt_data = decode_token(access_token)
@@ -209,12 +209,12 @@ class DataBase():
 
             # Get requested info.
             # Logic for item_counter described in comments for "search_items" method.
-            self.__cur.execute(f"""SELECT Items.item_id, name, price, main_photo_src FROM Items INNER JOIN Cart
-                    ON Items.item_id = Cart.item_id WHERE Cart.user_id = '{user_id}' LIMIT {item_counter}, 15""")
+            self.__cur.execute(f"""SELECT Items.item_id, name, price, main_photo_src, size FROM Items INNER JOIN Cart
+                    ON Items.item_id = Cart.item_id WHERE Cart.user_id = '{user_id}' LIMIT {item_counter}, 14""")
 
             res = self.__cur.fetchall()
-
-            return pack_items(res)
+            
+            return pack_items(res, add_size=True)
 
         except sqlite3.Error:
             return {'error' : 'DataBase Error'}

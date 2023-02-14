@@ -2,7 +2,7 @@ from werkzeug.security import generate_password_hash
 from flask import request, g, jsonify
 import sqlite3
 
-from app.DataBase import DataBase
+from app.database import Database
 from app import app
 
 dbase = None
@@ -27,7 +27,7 @@ def get_db():
 def before_request():
     global dbase
     db = get_db()
-    dbase = DataBase(db)
+    dbase = Database(db)
 
 
 # Close the connection after every request.
@@ -42,7 +42,7 @@ def close_db(error):
 @app.route('/login', methods = ["POST"])
 def login():
     content = request.json
-    res = dbase.get_account(content['mail'], content['psw'])
+    res = dbase.retrieve_account(content['mail'], content['psw'])
 
     return jsonify(res)
 
@@ -53,7 +53,7 @@ def login():
 def registr():
     content = request.json
     hash = generate_password_hash(content['psw'])
-    res = dbase.add_user(content['name'], content['mail'], hash)
+    res = dbase.create_user(content['name'], content['mail'], hash)
 
     return jsonify(res)
 
@@ -72,7 +72,7 @@ def search():
 @app.route('/item', methods = ["POST"])
 def item():
     content = request.json
-    res = dbase.get_item(content['item_id'])
+    res = dbase.retrieve_item(content['item_id'])
 
     return jsonify(res)
 
@@ -106,7 +106,7 @@ def cart():
 @app.route('/show_cart', methods = ['POST'])
 def show_cart():
     content = request.json
-    res = dbase.get_cart(content['access_token'], content['item_counter'])
+    res = dbase.retrieve_cart(content['access_token'], content['item_counter'])
 
     return jsonify(res)
 
